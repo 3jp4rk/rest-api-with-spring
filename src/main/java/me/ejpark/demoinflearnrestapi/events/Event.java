@@ -34,7 +34,7 @@ public class Event {
     private boolean free;
 
     @Enumerated(EnumType.STRING) // ordinal(기본값)은 enum 순서대로 0 1 2 이렇게 부여함. string으로 저장 권장.
-    private EventStatus eventStatus;
+    private EventStatus eventStatus = EventStatus.DRAFT; // 초기값 draft로 설정
 }
 
 // 등록 가능한 인원수 10명 -> 경매제처럼 최저금액 사람은 더 높은 금액을 낸 사람이 큐에 들어가는 식으로.. (무제한 경매)

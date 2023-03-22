@@ -24,9 +24,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @RunWith(SpringRunner.class)
-@WebMvcTest // 슬라이스 테스트라 웹용 빈만 등록.
-//@SpringBootTest // webenvironment param = 기본값: mock. 계속 mockmvc 테스트 사용 가능.
-//@AutoConfigureMockMvc // SpringBootTest랑 같이 쓰려면
+//@WebMvcTest // 슬라이스 테스트라 웹용 빈만 등록.
+@SpringBootTest // webenvironment param = 기본값: mock. 계속 mockmvc 테스트 사용 가능.
+@AutoConfigureMockMvc // SpringBootTest랑 같이 쓰려면
 // mocking할 게 많으면 테스트코드 짜기 어렵고 관리도 어려움. springbootTest 사용.
 public class EventControllerTests {
 
@@ -39,11 +39,9 @@ public class EventControllerTests {
     @Autowired
     ObjectMapper objectMapper;
 
+    // springbootTest 사용시 repository 선언되어 있다면 삭제해야 함 mocking 사용안한다
     // 슬라이스 테스트는 web용 bean만 등록 respository는 bean으로 등록 안 함. -> repository bean .못 찾아서 에러남
     // 레포지토리 모킹해야 됨 = mock으로 만들어 달라
-
-    @MockBean
-    EventRepository eventRepository; // 단, mock 객체는 save되더라도 return값이 전부 null. null에서 getId 한다면 에러가 남...
 
     @Test
     public void createEvent() throws Exception {
@@ -62,16 +60,17 @@ public class EventControllerTests {
                 .maxPrice(200)
                 .limitOfEnrollment(100)
                 .location("강남역 D2 스타트업 팩토리")
-                // 입력값 제한
+
+                // 입력값 제한하기
                 // id도 DB에 들어갈 때 값이 자동 생성되어야 하고, 값이 다 있으면 free도 true가 아니고... location이 있으니까 offline은 true가 맞는데 이런 식으로 집어넣을 수 있게 됨. 이러면 안 도미.
                 .free(true)
                 .offline(false)
+                .eventStatus(EventStatus.PUBLISHED) // 이렇게 주더라도 안 됨 (dto에서 입력하기로 한 값 이외에는 무시)
                 .build()
                 ;
         // mockbean return값 null이라서 발생하는 nullpointer exception
-        event.setId(10);
+//        event.setId(10);
         // 스터빙
-        Mockito.when(eventRepository.save(event)).thenReturn(event); // save(event)가 호출되면 event return해라
         // eventController.java 에서는 mocking을 안하는데 여기서는 mocking하니까 null이 들어감
         // slicing test 해제
 
@@ -92,8 +91,10 @@ public class EventControllerTests {
                 // 입력값 제한
                 // 이런 값이 들어오면 안된다
                 // DTO 사용. jacksonjson의 annotation 사용해도 되긴 함. 그런데 도메인 클래스에 어노테이션이 너무 많아지면 좀 그러니까...
-//                .andExpect(jsonPath("id").value(Matchers.not(100)))
-//                .andExpect(jsonPath("free").value(Matchers.not(true)))
+                .andExpect(jsonPath("id").value(Matchers.not(100)))
+                .andExpect(jsonPath("free").value(Matchers.not(true)))
+                .andExpect(jsonPath("eventStatus").value(Matchers.not(EventStatus.DRAFT.name()))) // 생성된 직후에는 draft 상태여야 함
+
 
 
 
