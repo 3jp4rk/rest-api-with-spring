@@ -1,6 +1,7 @@
 package me.ejpark.demoinflearnrestapi.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import me.ejpark.demoinflearnrestapi.common.TestDescription;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,6 +45,7 @@ public class EventControllerTests {
     // 레포지토리 모킹해야 됨 = mock으로 만들어 달라
 
     @Test
+    @TestDescription("정상적으로 이벤트를 생성하는 테스트")
     // 입력값이 제대로 들어오는 경우에만 test
     public void createEvent() throws Exception {
 
@@ -100,6 +102,8 @@ public class EventControllerTests {
     }
 
     @Test
+    @TestDescription("입력받을 수 없는 값을 사용한 경우에 에러가 발생하는 테스트")
+
     // 입력값이 이상하게 들어오는 경우의 test
     public void createEvent_Bad_Request() throws Exception {
 
@@ -143,6 +147,8 @@ public class EventControllerTests {
 
     // 들어와야 할 값이 안 들어왔을 때
     @Test
+    @TestDescription("입력값이 비어 있는 경우에 에러가 발생하는 테스트")
+
     public void createEvent_Bad_Request_Empty_Input() throws Exception {
         EventDto eventDto = EventDto.builder().build(); // 빈값으로 보내기
 
@@ -154,7 +160,13 @@ public class EventControllerTests {
 
     // 입력값이 들어오긴 하는데 값이 이상한 경우
     // annotaion으로 검증 어려움 -> validator 만들어서 검증
+    /*
+    주석이나 annotation이나 둘 다 달아서 test에 대한 설명...
+    junit5: annotaion 제공하므로 그거 쓰면 됨. 그때는 이 annotation 이름 목록으로 나오게 된다.
+     */
     @Test
+    @TestDescription("입력값이 잘못된 경우에 에러가 발생하는 테스트")
+
     public void createEvent_Bad_Request_Wrong_Input() throws Exception {
         EventDto eventDto = EventDto.builder()
                 .name("Spring")
