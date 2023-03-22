@@ -49,7 +49,7 @@ public class EventControllerTests {
 
         // 요청 만들기
         // 이벤트 빌더 사용
-        EventDto event = EventDto.builder()
+        EventDto eventDto = EventDto.builder()
                 .name("Spring")
                 .description("REST API development with Spring")
                 .beginEnrollmentDateTime(LocalDateTime.of(2023, 03, 21, 22, 57))
@@ -74,7 +74,7 @@ public class EventControllerTests {
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .accept(MediaTypes.HAL_JSON)
                         // 요청 추가 (json 변환 후 본문 객체에 넣어 줌)
-                        .content(objectMapper.writeValueAsString(event))
+                        .content(objectMapper.writeValueAsString(eventDto))
                 )// accept header를 통해 원하는 응답 알려줌. accept 헤더 지정하는 게 HTTP 응답에 더 맞는 듯.
                 .andDo(print()) // 무슨 요청, 무슨 응답인지 확인 가능. MockHttpServletResponse: 출력 확인
                 .andExpect(status().isCreated()) // isCreated() 대신 201
@@ -151,6 +151,32 @@ public class EventControllerTests {
                 .content(this.objectMapper.writeValueAsString(eventDto)))
                 .andExpect(status().isBadRequest());
     }
+
+    // 입력값이 들어오긴 하는데 값이 이상한 경우
+    // annotaion으로 검증 어려움 -> validator 만들어서 검증
+    @Test
+    public void createEvent_Bad_Request_Wrong_Input() throws Exception {
+        EventDto eventDto = EventDto.builder()
+                .name("Spring")
+                .description("REST API development with Spring")
+                // event 끝나는 날짜가 시작하는 날짜보다 빨라 버림 (이상한 값)
+                .beginEnrollmentDateTime(LocalDateTime.of(2023, 03, 21, 22, 57))
+                .closeEnrollmentDateTime(LocalDateTime.of(2023, 03, 20, 22, 57))
+                .beginEventDateTime(LocalDateTime.of(2023, 03, 23, 22, 57))
+                .endEventDateTime(LocalDateTime.of(2023, 03, 22, 22, 57))
+                // max가 base보다 작다고? (이상한 값)
+                .basePrice(10000)
+                .maxPrice(200)
+                .limitOfEnrollment(100)
+                .location("강남역 D2 스타트업 팩토리")
+                .build();
+
+        this.mockMvc.perform(post("/api/events") // 이거 하려면 늘 메서드에 exception 있어야 함
+                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .content(this.objectMapper.writeValueAsString(eventDto)))
+                .andExpect(status().isBadRequest()); // 400 예상했는데 201 나와도 테스트 깨짐.
+    }
+
 
     // 테스트 다 실행하려면 메서드 밖에 커서 두게 하고 ctrl shift r -> 클래스 안에 있는 모든 테스트 메서드 실행
 

@@ -1,10 +1,10 @@
 package me.ejpark.demoinflearnrestapi.events;
 
 import org.modelmapper.ModelMapper;
-import org.modelmapper.internal.Errors;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,10 +27,14 @@ public class EventController {
 
     private final ModelMapper modelMapper;
 
+    private final EventValidator eventValidator;
+
     // 생성자가 하나만 있고 생성자로 받아올 파라미터가 bean으로 등록되어 있으면 autowired 생략해도 됨 (spring 4.3부터)
-    public EventController(EventRepository eventRepository, ModelMapper modelMapper) {
+    public EventController(EventRepository eventRepository, ModelMapper modelMapper, EventValidator eventValidator) {
         this.eventRepository = eventRepository;
         this.modelMapper = modelMapper;
+        this.eventValidator = eventValidator;
+
     }
 
     // event repository
@@ -57,6 +61,15 @@ public class EventController {
         if (errors.hasErrors()) {
             return ResponseEntity.badRequest().build();
         }
+
+        // validator
+        eventValidator.validate(eventDto, errors);
+        if (errors.hasErrors()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+
+
         Event event = modelMapper.map(eventDto, Event.class); // eventdto -> event 변환
         Event newEvent = this.eventRepository.save(event);
         URI createdUri = linkTo(EventController.class).slash(newEvent.getId()).toUri();
