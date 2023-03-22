@@ -44,12 +44,12 @@ public class EventControllerTests {
     // 레포지토리 모킹해야 됨 = mock으로 만들어 달라
 
     @Test
+    // 입력값이 제대로 들어오는 경우에만 test
     public void createEvent() throws Exception {
 
         // 요청 만들기
         // 이벤트 빌더 사용
-        Event event = Event.builder()
-                .id(100)
+        EventDto event = EventDto.builder()
                 .name("Spring")
                 .description("REST API development with Spring")
                 .beginEnrollmentDateTime(LocalDateTime.of(2023, 03, 21, 22, 57))
@@ -60,12 +60,8 @@ public class EventControllerTests {
                 .maxPrice(200)
                 .limitOfEnrollment(100)
                 .location("강남역 D2 스타트업 팩토리")
-
                 // 입력값 제한하기
                 // id도 DB에 들어갈 때 값이 자동 생성되어야 하고, 값이 다 있으면 free도 true가 아니고... location이 있으니까 offline은 true가 맞는데 이런 식으로 집어넣을 수 있게 됨. 이러면 안 도미.
-                .free(true)
-                .offline(false)
-                .eventStatus(EventStatus.PUBLISHED) // 이렇게 주더라도 안 됨 (dto에서 입력하기로 한 값 이외에는 무시)
                 .build()
                 ;
         // mockbean return값 null이라서 발생하는 nullpointer exception
@@ -100,6 +96,49 @@ public class EventControllerTests {
 
         // 최소 데이터 3개는 가지고 만들어야 함... 구현 전에 Test부터 만들어야 (TDD) 삼각정량법?? 측량법?
 
+
+        ; // 세미콜론 여기 두기
+
+
+    }
+
+    @Test
+    // 입력값이 이상하게 들어오는 경우의 test
+    public void createEvent_Bad_Request() throws Exception {
+
+        // 이상한 값 막 넣어주면
+        Event event = Event.builder()
+                .id(100)
+                .name("Spring")
+                .description("REST API development with Spring")
+                .beginEnrollmentDateTime(LocalDateTime.of(2023, 03, 21, 22, 57))
+                .closeEnrollmentDateTime(LocalDateTime.of(2023, 03, 22, 22, 57))
+                .beginEventDateTime(LocalDateTime.of(2023, 03, 23, 22, 57))
+                .endEventDateTime(LocalDateTime.of(2023, 03, 23, 22, 57))
+                .basePrice(100)
+                .maxPrice(200)
+                .limitOfEnrollment(100)
+                .location("강남역 D2 스타트업 팩토리")
+
+                // 입력값 제한하기
+                // id도 DB에 들어갈 때 값이 자동 생성되어야 하고, 값이 다 있으면 free도 true가 아니고... location이 있으니까 offline은 true가 맞는데 이런 식으로 집어넣을 수 있게 됨. 이러면 안 도미.
+                .free(true)
+                .offline(false)
+                .eventStatus(EventStatus.PUBLISHED) // 이렇게 주더라도 안 됨 (dto에서 입력하기로 한 값 이외에는 무시)
+                .build()
+                ;
+
+        mockMvc.perform(post("/api/events/")
+                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .accept(MediaTypes.HAL_JSON)
+                        // 요청 추가 (json 변환 후 본문 객체에 넣어 줌)
+                        .content(objectMapper.writeValueAsString(event))
+                )// accept header를 통해 원하는 응답 알려줌. accept 헤더 지정하는 게 HTTP 응답에 더 맞는 듯.
+                .andDo(print()) // 무슨 요청, 무슨 응답인지 확인 가능. MockHttpServletResponse: 출력 확인
+                .andExpect(status().isBadRequest()) // 이상한 값 넣어주면 bad request가 나오길
+                
+                // 보내든 말든 입력값만 걸러서 받을 건지, 그냥 error를 발생시켜 버릴 건지는 결정에 따라 달린 일
+                // 유연함 제공... 근데 값은 보낼 수 있나 보다... 하고 혼란을 줄 수 있기는 함 응답이 201이니까
 
         ; // 세미콜론 여기 두기
 
