@@ -46,6 +46,8 @@ public class EventControllerTests {
 
     @Test
     @TestDescription("정상적으로 이벤트를 생성하는 테스트")
+    // 이 테스트는 도메인에 넣어도 좋다!
+    // 비즈니스 로직 테스트. (도메인 객체에서 테스트)
     // 입력값이 제대로 들어오는 경우에만 test
     public void createEvent() throws Exception {
 
@@ -89,8 +91,11 @@ public class EventControllerTests {
                 // 입력값 제한
                 // 이런 값이 들어오면 안된다
                 // DTO 사용. jacksonjson의 annotation 사용해도 되긴 함. 그런데 도메인 클래스에 어노테이션이 너무 많아지면 좀 그러니까...
-                .andExpect(jsonPath("id").value(Matchers.not(100)))
-                .andExpect(jsonPath("free").value(Matchers.not(true)))
+                .andExpect(jsonPath("id").exists())
+                .andExpect(jsonPath("free").value(false))
+                // 근데 아마 여기서 깨질 것임....... 기본값이 false라고 나올 거라서 ㅎㅎ
+                // 이벤트 만든 후에 update 함수 하나 불러서 free 값 조건에 맞게 변경 후 test.
+                .andExpect(jsonPath("offline").value(true)) // location이 있으므로 true라고 나와야 한다
                 .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name())) // 생성된 직후에는 draft 상태여야 함
 
         // 최소 데이터 3개는 가지고 만들어야 함... 구현 전에 Test부터 만들어야 (TDD) 삼각정량법?? 측량법?
@@ -195,7 +200,7 @@ public class EventControllerTests {
 //                .andExpect(jsonPath("$[0].rejectedValue").exists())
 //                .andExpect(jsonPath("$[0].field").exists()) // global error의 경우엔 이게 없으므로 테스트 꺠질 수 있다.
         // 혹시 $[0].objectName이 존재하지 않는다고 하면 eventController로 가서 return 값에 error를 serialziation해서 담아주도록 되어 있는지 확인할 것.
-
+        // 결과값 복사해서 jsonParser로 확인해 볼 것.
 
         ; // 400 예상했는데 201 나와도 테스트 깨짐.
     }

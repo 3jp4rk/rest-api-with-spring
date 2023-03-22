@@ -35,6 +35,23 @@ public class Event {
 
     @Enumerated(EnumType.STRING) // ordinal(기본값)은 enum 순서대로 0 1 2 이렇게 부여함. string으로 저장 권장.
     private EventStatus eventStatus = EventStatus.DRAFT; // 초기값 draft로 설정
+
+    public void update() {
+        // Update free
+        // 삼항 연산자 이용해서 리팩토링해도 됨
+        if (this.basePrice == 0 && this.maxPrice == 0) {
+            this.free = true;
+        } else {
+            this.free = false;
+        }
+
+        // Update offline
+        if (this.location == null || this.location.isBlank()) { // java 11부터 새로 생긴 isBlaank 메서드. 그전에는 trim해서 isEmpty() 확인.
+            this.offline = false;
+        } else {
+            this.offline = true;
+        }
+    }
 }
 
 // 등록 가능한 인원수 10명 -> 경매제처럼 최저금액 사람은 더 높은 금액을 낸 사람이 큐에 들어가는 식으로.. (무제한 경매)

@@ -42,9 +42,75 @@ public class EventTest {
         assertThat(event.getName()).isEqualTo(name);
         assertThat(event.getDescription()).isEqualTo(description);
 
-
-
     }
 
+    // 비즈니스 로직 테스트
+    @Test
+    public void testFree() {
+
+        // Given
+        Event event = Event.builder()
+                .basePrice(0)
+                .maxPrice(0)
+                .build();
+
+        // When
+        event.update();
+
+        // Then
+        assertThat(event.isFree()).isTrue();
+
+
+        // Given
+        event = Event.builder()
+                .basePrice(100)
+                .maxPrice(0)
+                .build();
+
+        // When
+        event.update();
+
+        // Then
+        assertThat(event.isFree()).isFalse(); // 무료 아님
+
+
+        // Given
+        event = Event.builder()
+                .basePrice(0)
+                .maxPrice(100)
+                .build();
+
+        // When
+        event.update();
+
+        // Then
+        assertThat(event.isFree()).isFalse(); // 무료 아님
+    }
+
+    // 온라인 오프라인 여부 테스트 (단위 테스트)
+    @Test
+    public void testoffline() {
+        // Given
+        Event event = Event.builder()
+                .location("강남역 네이버 D2 스타트업 팩토리")
+                .build();
+
+        // When
+        event.update();
+
+        // Then
+        assertThat(event.isOffline()).isTrue(); // 장소 있으므로 오프라인
+
+
+        // Given
+        event = Event.builder()
+                .build();
+
+        // When
+        event.update();
+
+        // Then
+        assertThat(event.isOffline()).isFalse(); // 장소 없으므로 오프라인 아님
+    }
 
 }

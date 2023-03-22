@@ -75,7 +75,13 @@ public class EventController {
         }
 
         Event event = modelMapper.map(eventDto, Event.class); // eventdto -> event 변환
+
+        // 들어온 값에 따라 free update (무료인지 아닌지)
+        event.update();
         Event newEvent = this.eventRepository.save(event);
+        // 위의 두 줄은 service class에 보내는 것도 괜찮음 .
+
+
         URI createdUri = linkTo(EventController.class).slash(newEvent.getId()).toUri();
         // newEvent에서 null이 뜨는 이유? mocking했는데 왜지?
         // save가 호출될 떄 object를 받은 경우에 객체 return.
