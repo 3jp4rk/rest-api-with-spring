@@ -89,10 +89,7 @@ public class EventControllerTests {
                 // DTO 사용. jacksonjson의 annotation 사용해도 되긴 함. 그런데 도메인 클래스에 어노테이션이 너무 많아지면 좀 그러니까...
                 .andExpect(jsonPath("id").value(Matchers.not(100)))
                 .andExpect(jsonPath("free").value(Matchers.not(true)))
-                .andExpect(jsonPath("eventStatus").value(Matchers.not(EventStatus.DRAFT.name()))) // 생성된 직후에는 draft 상태여야 함
-
-
-
+                .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name())) // 생성된 직후에는 draft 상태여야 함
 
         // 최소 데이터 3개는 가지고 만들어야 함... 구현 전에 Test부터 만들어야 (TDD) 삼각정량법?? 측량법?
 
@@ -142,9 +139,19 @@ public class EventControllerTests {
 
         ; // 세미콜론 여기 두기
 
-
     }
 
+    // 들어와야 할 값이 안 들어왔을 때
+    @Test
+    public void createEvent_Bad_Request_Empty_Input() throws Exception {
+        EventDto eventDto = EventDto.builder().build(); // 빈값으로 보내기
 
+        this.mockMvc.perform(post("/api/events") // 이거 하려면 늘 메서드에 exception 있어야 함
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(this.objectMapper.writeValueAsString(eventDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    // 테스트 다 실행하려면 메서드 밖에 커서 두게 하고 ctrl shift r -> 클래스 안에 있는 모든 테스트 메서드 실행
 
 }

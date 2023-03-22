@@ -1,6 +1,7 @@
 package me.ejpark.demoinflearnrestapi.events;
 
 import org.modelmapper.ModelMapper;
+import org.modelmapper.internal.Errors;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import javax.validation.Valid;
 import java.net.URI;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -48,8 +50,13 @@ public class EventController {
 //        return ResponseEntity.created(createdUri).body(event); // 201 응답 생성 -> repository 추가 시 return값 이렇게 바꿔야
 //    }
     // DTO 사용
-    public ResponseEntity createEvent(@RequestBody EventDto eventDto) { // 입력값에 id, free가 있어도 무시하게 됨. 받기로 명시한 값들만 들어오게 됨
+    // @Valid: request에 들어있는 값을 dto에  binding 할 떄 검증 수행
+    // Errors에 검증 결과 넣어줌
+    public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto, Errors errors) { // 입력값에 id, free가 있어도 무시하게 됨. 받기로 명시한 값들만 들어오게 됨
 
+        if (errors.hasErrors()) {
+            return ResponseEntity.badRequest().build();
+        }
         Event event = modelMapper.map(eventDto, Event.class); // eventdto -> event 변환
         Event newEvent = this.eventRepository.save(event);
         URI createdUri = linkTo(EventController.class).slash(newEvent.getId()).toUri();
