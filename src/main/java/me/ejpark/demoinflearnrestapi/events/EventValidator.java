@@ -14,6 +14,7 @@ public class EventValidator {
                 // 2번부터는 비즈니스 로직 위배
             errors.rejectValue("basePrice", "wrongValue", "BasePrice is wrong."); // 마우스 호버링하면 parameter 팝업됨
             errors.rejectValue("maxPrice", "wrongValue", "maxPrice is wrong."); // 마우스 호버링하면 parameter 팝업됨
+            errors.reject("wrongPrices", "Values for prices are wrong.");
         }
 
         LocalDateTime endEventDateTime = eventDto.getEndEventDateTime();
@@ -22,6 +23,7 @@ public class EventValidator {
                 endEventDateTime.isBefore(eventDto.getCloseEnrollmentDateTime()) ||
                 endEventDateTime.isBefore(eventDto.getBeginEnrollmentDateTime())) {
             errors.rejectValue("endEventDateTime", "endEventDateTime is Wrong Value.");
+
         }
 
         // TODO beginEventDateTime
