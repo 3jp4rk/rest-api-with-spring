@@ -177,7 +177,7 @@ public class EventControllerTests {
                 .name("Spring")
                 .description("REST API development with Spring")
                 // event 끝나는 날짜가 시작하는 날짜보다 빨라 버림 (이상한 값)
-                .beginEnrollmentDateTime(LocalDateTime.of(2023, 03, 21, 22, 57))
+                .beginEnrollmentDateTime(LocalDateTime.of(2023, 03, 24, 22, 57))
                 .closeEnrollmentDateTime(LocalDateTime.of(2023, 03, 20, 22, 57))
                 .beginEventDateTime(LocalDateTime.of(2023, 03, 23, 22, 57))
                 .endEventDateTime(LocalDateTime.of(2023, 03, 22, 22, 57))

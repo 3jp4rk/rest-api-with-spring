@@ -3,6 +3,7 @@ package me.ejpark.demoinflearnrestapi.events;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 // validator에 대한 unittest도 따로 만들 수 있다
@@ -19,14 +20,32 @@ public class EventValidator {
 
         LocalDateTime endEventDateTime = eventDto.getEndEventDateTime();
         // 날짜 검증
+        // 1. 끝나는 날짜가 시작하는 날짜보다 이르거나 2. 시작하는 날짜가 끝나는 날짜보다 늦거나
+        // 3. 등록 시작일, 등록 마감일, 이벤트 시작일, 이벤트 마감일
+
         if (endEventDateTime.isBefore(eventDto.getBeginEventDateTime()) ||
                 endEventDateTime.isBefore(eventDto.getCloseEnrollmentDateTime()) ||
                 endEventDateTime.isBefore(eventDto.getBeginEnrollmentDateTime())) {
             errors.rejectValue("endEventDateTime", "endEventDateTime is Wrong Value.");
-
         }
 
         // TODO beginEventDateTime
+        LocalDateTime beginEventDateTime = eventDto.getBeginEventDateTime();
+        // 날짜 검증
+        if (beginEventDateTime.isAfter(eventDto.getEndEventDateTime()) ||
+                beginEventDateTime.isBefore(eventDto.getCloseEnrollmentDateTime()) ||
+                beginEventDateTime.isBefore(eventDto.getBeginEnrollmentDateTime())) {
+            errors.rejectValue("beginEventDateTime", "beginEventDateTime is Wrong Value.");
+        }
+
         // TODO closeEnrollmentDatetTime
+        LocalDateTime closeEnrollmentDateTime = eventDto.getCloseEnrollmentDateTime();
+        // 날짜 검증
+        if (closeEnrollmentDateTime.isBefore(eventDto.getBeginEnrollmentDateTime()) ||
+                closeEnrollmentDateTime.isAfter(eventDto.getBeginEventDateTime()) ||
+                closeEnrollmentDateTime.isAfter(eventDto.getEndEventDateTime())) {
+            errors.rejectValue("closeEnrollmentDateTime", "closeEnrollmentDateTime is Wrong Value.");
+        }
+
     }
 }
