@@ -1,16 +1,19 @@
 package me.ejpark.demoinflearnrestapi.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import me.ejpark.demoinflearnrestapi.common.RestDocConfiguration;
 import me.ejpark.demoinflearnrestapi.common.TestDescription;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -19,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -29,6 +33,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest // webenvironment param = 기본값: mock. 계속 mockmvc 테스트 사용 가능.
 @AutoConfigureMockMvc // SpringBootTest랑 같이 쓰려면
 // mocking할 게 많으면 테스트코드 짜기 어렵고 관리도 어려움. springbootTest 사용.
+@AutoConfigureRestDocs // rest docs
+@Import(RestDocConfiguration.class) // bean 설정 import해서 사용
 public class EventControllerTests {
 
     @Autowired
@@ -105,6 +111,12 @@ public class EventControllerTests {
                 .andExpect(jsonPath("_links.update-event").exists())
 
         // 최소 데이터 3개는 가지고 만들어야 함... 구현 전에 Test부터 만들어야 (TDD) 삼각정량법?? 측량법?
+
+                // rest docs (test 돌릴 떄마다 snippet 덮어씌워지므로 기존 것들은 날아간다)
+                .andDo(document("create-event") // 타겟 디렉토리 (target 폴더 밑에 generated-snipptes/create-event 생성)
+
+
+                );
 
 
         ; // 세미콜론 여기 두기
