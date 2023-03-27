@@ -59,7 +59,7 @@ public class EventControllerTests {
                 .beginEnrollmentDateTime(LocalDateTime.of(2023, 03, 21, 22, 57))
                 .closeEnrollmentDateTime(LocalDateTime.of(2023, 03, 22, 22, 57))
                 .beginEventDateTime(LocalDateTime.of(2023, 03, 23, 22, 57))
-                .endEventDateTime(LocalDateTime.of(2023, 03, 23, 22, 57))
+                .endEventDateTime(LocalDateTime.of(2023, 03, 24, 22, 57))
                 .basePrice(100)
                 .maxPrice(200)
                 .limitOfEnrollment(100)
@@ -97,6 +97,12 @@ public class EventControllerTests {
                 // 이벤트 만든 후에 update 함수 하나 불러서 free 값 조건에 맞게 변경 후 test.
                 .andExpect(jsonPath("offline").value(true)) // location이 있으므로 true라고 나와야 한다
                 .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name())) // 생성된 직후에는 draft 상태여야 함
+                // 응답이 잘 생성됐을 경우 lnk 정보를 받을 수 있어야 함
+                // link 정보가 없으므로 client는 전이를 할 수가 없다
+                // link key값 다 맞춰 줘야 한다
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.query-events").exists())
+                .andExpect(jsonPath("_links.update-event").exists())
 
         // 최소 데이터 3개는 가지고 만들어야 함... 구현 전에 Test부터 만들어야 (TDD) 삼각정량법?? 측량법?
 

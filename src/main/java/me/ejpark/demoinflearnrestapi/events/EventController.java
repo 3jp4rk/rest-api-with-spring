@@ -2,6 +2,7 @@ package me.ejpark.demoinflearnrestapi.events;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
@@ -82,12 +83,27 @@ public class EventController {
         // 위의 두 줄은 service class에 보내는 것도 괜찮음 .
 
 
-        URI createdUri = linkTo(EventController.class).slash(newEvent.getId()).toUri();
+        // 이 linkto가 spring hateoas가 제공하는 link 생성 기능의 일부
+        // link = new link(""); 해서 만들 수 있음.
+        // controller mapping 정보 가져와서 만드는 방법.
+
+        ControllerLinkBuilder selfLinkBuilder = linkTo(EventController.class).slash(newEvent.getId());
+        URI createdUri = selfLinkBuilder.toUri();
+
         // newEvent에서 null이 뜨는 이유? mocking했는데 왜지?
         // save가 호출될 떄 object를 받은 경우에 객체 return.
         // test code에서 save에 전달한 객체는 메서드 안에서 새로 만든 객체. test code의 모킹 객체가 아님.
         // null이 return됨. null.getid라서 에러가 나 버림...
-        return ResponseEntity.created(createdUri).body(event);
 
+        // hateoas
+        // event -> eventResource로 변환
+        // alt option command v
+        EventResource eventResource = new EventResource(event);
+        eventResource.add(linkTo(EventController.class).withRel("query-events"));
+//        eventResource.add(selfLinkBuilder.withSelfRel()); // self relation으로 추가 (eventResource에서 만드는 걸로 변경)
+        eventResource.add(selfLinkBuilder.withRel("update-event")); // link 자체는 같아도 method가 다름 (put)
+
+
+        return ResponseEntity.created(createdUri).body(eventResource);
     }
 }
