@@ -22,7 +22,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 
+import static org.springframework.restdocs.headers.HeaderDocumentation.*;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -113,8 +116,62 @@ public class EventControllerTests {
         // 최소 데이터 3개는 가지고 만들어야 함... 구현 전에 Test부터 만들어야 (TDD) 삼각정량법?? 측량법?
 
                 // rest docs (test 돌릴 떄마다 snippet 덮어씌워지므로 기존 것들은 날아간다)
-                .andDo(document("create-event") // 타겟 디렉토리 (target 폴더 밑에 generated-snipptes/create-event 생성)
+                .andDo(document("create-event", // 타겟 디렉토리 (target 폴더 밑에 generated-snipptes/create-event 생성)
+                        links(
+                                linkWithRel("self").description("link to self"),
+                                linkWithRel("query-events").description("link to query events"),
+                                linkWithRel("update-event").description("link to update an event")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.ACCEPT).description("accept header"),
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")
 
+                        ),
+                        requestFields(
+                                // 요청으로 받는 것들 (curl-request.adoc 켜 놓고 하기)
+                                fieldWithPath("name").description("Name of new event"),
+                                fieldWithPath("description").description("description of new event"),
+                                fieldWithPath("beginEnrollmentDateTime").description("beginEnrollmentDateTime of new event"),
+                                fieldWithPath("closeEnrollmentDateTime").description("closeEnrollmentDateTime of new event"),
+                                fieldWithPath("beginEventDateTime").description("beginEventDateTime of new event"),
+                                fieldWithPath("endEventDateTime").description("endEventDateTime of new event"),
+                                fieldWithPath("location").description("location of new event"),
+                                fieldWithPath("basePrice").description("basePrice of new event"),
+                                fieldWithPath("maxPrice").description("maxPrice of new event"),
+                                fieldWithPath("limitOfEnrollment").description("limitOfEnrollment of new event")
+
+                        ),
+
+                        // response
+                        responseHeaders(
+                                headerWithName(HttpHeaders.LOCATION).description("Location header"), // 새로 생성된 이벤트를 조회할 수 있는 URL
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("content type") // HAL-json
+                        ),
+                        responseFields( // ResponseFields로 하게 되면 "_links"도 response의 일부이므로 검증을 거쳐야 한다. 그러므로 일부 field만 검증하려면 relaxed라는 prefix 사용
+                                // 단, relaxed 접두어
+                                // 문서 일부분만 테스트가 가능 -> 정확한 문서를 생성하지 못한다.
+                                fieldWithPath("id").description("id of new event"),
+                                fieldWithPath("name").description("Name of new event"),
+                                fieldWithPath("description").description("description of new event"),
+                                fieldWithPath("beginEnrollmentDateTime").description("beginEnrollmentDateTime of new event"),
+                                fieldWithPath("closeEnrollmentDateTime").description("closeEnrollmentDateTime of new event"),
+                                fieldWithPath("beginEventDateTime").description("beginEventDateTime of new event"),
+                                fieldWithPath("endEventDateTime").description("endEventDateTime of new event"),
+                                fieldWithPath("location").description("location of new event"),
+                                fieldWithPath("basePrice").description("base Price of new event"),
+                                fieldWithPath("maxPrice").description("max Price of new event"),
+                                fieldWithPath("limitOfEnrollment").description("limit Of Enrollment"),
+                                fieldWithPath("free").description("it tells if this event is free or not"),
+                                fieldWithPath("offline").description("it tells if this event is offline event or not"),
+                                fieldWithPath("eventStatus").description("event status"),
+
+                                // relaxed prefix 사용하거나 이렇게 다 명시해주거나... (relaxed보다는 전부 다 문서화하는 것을 권장. API 변경시 바로 바뀌기 때문)
+                                fieldWithPath("_links.self.href").description("link to self"),
+                                fieldWithPath("_links.query-events.href").description("link to query event list"),
+                                fieldWithPath("_links.update-event.href").description("link to update existing event")
+
+                        )
+                    )
 
                 );
 
