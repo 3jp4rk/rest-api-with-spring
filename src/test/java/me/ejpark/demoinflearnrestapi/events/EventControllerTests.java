@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -38,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // mocking할 게 많으면 테스트코드 짜기 어렵고 관리도 어려움. springbootTest 사용.
 @AutoConfigureRestDocs // rest docs
 @Import(RestDocConfiguration.class) // bean 설정 import해서 사용
+@ActiveProfiles("test") // test 밑의 application-test.properties도 사용! 그러므로 test는 계속 h2를 사용하게 된다.
 public class EventControllerTests {
 
     @Autowired
@@ -109,9 +111,10 @@ public class EventControllerTests {
                 // 응답이 잘 생성됐을 경우 lnk 정보를 받을 수 있어야 함
                 // link 정보가 없으므로 client는 전이를 할 수가 없다
                 // link key값 다 맞춰 줘야 한다
-                .andExpect(jsonPath("_links.self").exists())
-                .andExpect(jsonPath("_links.query-events").exists())
-                .andExpect(jsonPath("_links.update-event").exists())
+                // docs로 확인할 예정이므로 삭제
+//                .andExpect(jsonPath("_links.self").exists())
+//                .andExpect(jsonPath("_links.query-events").exists())
+//                .andExpect(jsonPath("_links.update-event").exists())
 
         // 최소 데이터 3개는 가지고 만들어야 함... 구현 전에 Test부터 만들어야 (TDD) 삼각정량법?? 측량법?
 
@@ -120,7 +123,9 @@ public class EventControllerTests {
                         links(
                                 linkWithRel("self").description("link to self"),
                                 linkWithRel("query-events").description("link to query events"),
-                                linkWithRel("update-event").description("link to update an event")
+                                linkWithRel("update-event").description("link to update an event"),
+                                linkWithRel("profile").description("link to update an event")
+
                         ),
                         requestHeaders(
                                 headerWithName(HttpHeaders.ACCEPT).description("accept header"),
@@ -168,7 +173,8 @@ public class EventControllerTests {
                                 // relaxed prefix 사용하거나 이렇게 다 명시해주거나... (relaxed보다는 전부 다 문서화하는 것을 권장. API 변경시 바로 바뀌기 때문)
                                 fieldWithPath("_links.self.href").description("link to self"),
                                 fieldWithPath("_links.query-events.href").description("link to query event list"),
-                                fieldWithPath("_links.update-event.href").description("link to update existing event")
+                                fieldWithPath("_links.update-event.href").description("link to update existing event"),
+                                fieldWithPath("_links.profile.href").description("link to profile")
 
                         )
                     )
