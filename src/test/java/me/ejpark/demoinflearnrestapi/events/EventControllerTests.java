@@ -1,6 +1,7 @@
 package me.ejpark.demoinflearnrestapi.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
 import me.ejpark.demoinflearnrestapi.common.RestDocConfiguration;
 import me.ejpark.demoinflearnrestapi.common.TestDescription;
 import org.hamcrest.Matchers;
@@ -275,13 +276,23 @@ public class EventControllerTests {
                 .andExpect(status().isBadRequest())
                 .andDo(print())
                 // 응답 본문에 이런 값이 잇었으면 좋겠다. 어떤 요청을 보냈었는지, 어떤 응답코드를 받았는지...
-                .andExpect(jsonPath("$[0].objectName").exists())
-                .andExpect(jsonPath("$[0].defaultMessage").exists())
-                .andExpect(jsonPath("$[0].code").exists())
+                // eventResource로 감쌌더니 json array에 대해서는 unwrap이 작동 안해서 코드 수정함
+
+                .andExpect(jsonPath("content[0].objectName").exists())
+                .andExpect(jsonPath("content[0].defaultMessage").exists())
+                .andExpect(jsonPath("content[0].code").exists())
 //                .andExpect(jsonPath("$[0].rejectedValue").exists())
 //                .andExpect(jsonPath("$[0].field").exists()) // global error의 경우엔 이게 없으므로 테스트 꺠질 수 있다.
         // 혹시 $[0].objectName이 존재하지 않는다고 하면 eventController로 가서 return 값에 error를 serialziation해서 담아주도록 되어 있는지 확인할 것.
         // 결과값 복사해서 jsonParser로 확인해 볼 것.
+
+                // section 3: index
+                // 에러가 발생했으면 에러를 받은 다음에 application 상태 전이가 index로만 가능함
+                // index로 갈 수 있는 link 추가
+                .andExpect(jsonPath("_links.index").exists());
+
+
+
 
         ; // 400 예상했는데 201 나와도 테스트 깨짐.
     }

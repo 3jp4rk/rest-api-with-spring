@@ -1,5 +1,6 @@
 package me.ejpark.demoinflearnrestapi.events;
 
+import me.ejpark.demoinflearnrestapi.common.ErrorsResource;
 import org.modelmapper.ModelMapper;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
@@ -61,15 +62,18 @@ public class EventController {
     public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto, Errors errors) { // 입력값에 id, free가 있어도 무시하게 됨. 받기로 명시한 값들만 들어오게 됨
 
         if (errors.hasErrors()) {
-            return ResponseEntity.badRequest().body(errors);
+//            return ResponseEntity.badRequest().body(errors);
+            return badRequest(errors);
+
         }
+
 
         // validator
         // 여기에 error 코드 같은 거 다 들어있다. debug해서 확인해보기
         // errors 0, 1, 2 들어가서 확인
         eventValidator.validate(eventDto, errors);
         if (errors.hasErrors()) {
-            return ResponseEntity.badRequest().body(errors); // body에 event는 담을 수 있었지만
+            return badRequest(errors); // body에 event는 담을 수 있었지만
             // body에 error를 담을 수는 없다... event처럼 json으로 안 나감.
             // error 객체를 json으로 변환할 수 없기 떄문.
             // java bean 스펙을 준수하고 있는 객체가 아니므로 변환할 수 없다.
@@ -107,5 +111,9 @@ public class EventController {
 
 
         return ResponseEntity.created(createdUri).body(eventResource);
+    }
+
+    private static ResponseEntity<ErrorsResource> badRequest(Errors errors) {
+        return ResponseEntity.badRequest().body(new ErrorsResource(errors));
     }
 }
