@@ -8,12 +8,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Builder @AllArgsConstructor @NoArgsConstructor @Getter @Setter
-@EqualsAndHashCode(of = "id") // 객체 간 연관관계 있을 때. 해쉬코드 구현할 때 모든 필드를 사용하는데, 엔티티간 연관관계가 생기면 연관관계가 상호 참조 -> equals해시코드 구현한 코드 안에서 스택오버플로우 발생 가능.
-//@EqualsAndHashCode(of = {"id", "account"}) // 여러 키 해도 되는데 연관된 건 안 됨
-
-// Entity에는 Data도 쓰면 안 됨! 상호참조 스택오버플로우 발생.
-// 메타 어노테이션 (custom) @MyEntity 이런식으로... 만들고 등록 가능.. 스프링 어노테이션은 되는데 lombok annotation은 안됨
-@Entity
+@EqualsAndHashCode(of = "id")
 public class Event {
 
     // Entity annotation 붙이는 순간 id 어노테이션 붙여 줘야 함
@@ -53,8 +48,3 @@ public class Event {
         }
     }
 }
-
-// 등록 가능한 인원수 10명 -> 경매제처럼 최저금액 사람은 더 높은 금액을 낸 사람이 큐에 들어가는 식으로.. (무제한 경매)
-// Event 생성 API의 결과값은 status는 기본이 draft.
-// profile: doc link
-// self: 이벤트 생성 API일 경우, 생성한 API 정보를 확인할 수 있는 값들

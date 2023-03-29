@@ -24,16 +24,6 @@ public class EventTest {
 
     @Test
     public void javaBean() {
-//        Event event = new Event();
-        // 리팩토링 전
-//        String name = "Event";
-//        event.setName(name); // getter setter // code 구현하지 않고 lombok annotation만 붙였는데도 이걸 사용할 수가 있다
-//        event.setDescription("Spring");
-//        assertThat(event.getName()).isEqualTo("Event");
-//        assertThat(event.getDescription()).isEqualTo("Spring");
-
-        // 리팩토링 후 (assertThat 자동완성이 너무 버벅여서) 단축키: 블록 지정 후 alt+ctrl+v
-        // 테스트 실행 단축키: ctrl shift R?
 
         // Given
         String name = "Event";
@@ -52,18 +42,6 @@ public class EventTest {
 
     // 비즈니스 로직 테스트
     @Test
-    // parameter들의 집합. baseprice, maxprice, free값
-    // 3개 있으므로 3번 호출됨.
-    // test가 깨지면? 어떻게 꺠졌는지 보여 줌
-    // type safe하게 변경해야 함
-//    @Parameters({
-//            "0, 0, true",
-//            "100, 0, false",
-//            "0, 100, true"
-//    })
-//    @Parameters(method = "paramsForTestFree")
-    // javadoc 확인해 보기...
-    // 메서드 이름을 생략할 수 있을까? -> ParametersFor___
     @Parameters
     public void testFree(int basePrice, int maxPrice, boolean isFree) {
 

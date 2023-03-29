@@ -11,13 +11,9 @@ import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 // 입력값을 받는 Dto
-// 중복이 생긴다는 단점
 @Data @Builder @NoArgsConstructor @AllArgsConstructor
 public class EventDto {
 
-    // 이만큼만 받을 수 있다고 명시.
-    // 이름이 안온다. 설명이 없다. 날짜도 없다... 들어와야 하는 정보가 안 온 경우!
-    // 검증 수행
     @NotEmpty
     private String name;
     @NotEmpty

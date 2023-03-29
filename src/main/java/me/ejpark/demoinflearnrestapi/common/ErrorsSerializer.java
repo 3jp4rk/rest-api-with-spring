@@ -8,17 +8,12 @@ import org.springframework.validation.Errors;
 
 import java.io.IOException;
 
-@JsonComponent // objectMapper에 등록해야 하는데, 이 annotation 붙이면 쉽게 등록 가능.
+@JsonComponent
 public class ErrorsSerializer extends JsonSerializer<Errors> {
 
-    // extend 했는데 에러 나는 경우?
-    // 그냥 우측 상단에 뜨는 빨간 느낌표 클릭 -> quick fix 확인 -> impelement methods
     @Override
     public void serialize(Errors errors, JsonGenerator gen, SerializerProvider serializerProvider) throws IOException {
         gen.writeStartArray();
-        // error: field error, global error
-        // rejectValue: field error
-        // reject: global error (여러 값이 조합해서 에러가 난 경우)
         errors.getFieldErrors().forEach(e -> { // for each 할 거면 stream 생략
             try {
                 gen.writeStartObject();
