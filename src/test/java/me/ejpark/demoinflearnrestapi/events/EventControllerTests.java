@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import me.ejpark.demoinflearnrestapi.common.RestDocConfiguration;
 import me.ejpark.demoinflearnrestapi.common.TestDescription;
+import net.minidev.json.parser.JSONParser;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,6 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.LocalDateTime;
 import java.util.stream.IntStream;
@@ -317,6 +319,22 @@ public class EventControllerTests {
         // lambda refactored
         IntStream.range(0, 30).forEach(this::generateEvent);
 
+        // refactored
+//        ResultActions perform = this.mockMvc.perform(get("/api/events")
+//                        .param("page", "1")
+//                        .param("size", "10")
+//                        .param("sort", "name,DESC")
+//        );
+//        perform.andDo(print())
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("page").exists())
+//                .andExpect(jsonPath("_embedded.eventList[0]._links.self").exists())
+//                .andExpect(jsonPath("_links.self").exists())
+//                .andExpect(jsonPath("_links.profile").exists())
+//                .andDo(document("query-events"))
+//        ;
+
+
         // when
         this.mockMvc.perform(get("/api/events")
                         .param("page", "1")
@@ -337,17 +355,55 @@ public class EventControllerTests {
 
                 // 문서화
                 .andDo(document("query-events"))
-        
+
+                // TODO (문서화 더 해야 함)
+                // page에 대한 정보: number: 1, links의 first는 첫 번째 페이지를 뜻한다... 이런 식으로 문서화 다 하면 됨
         ;
+
     }
 
-    private void generateEvent(int index) {
+    @Test
+    @TestDescription("기존의 이벤트를 1개 조회하기")
+    public void getEvent() throws Exception {
+        // Given
+        // 테스트를 위해서는 이벤트를 하나 생성해야 한다
+        Event event = this.generateEvent(100);
+
+        // When & Then
+        this.mockMvc.perform(get("/api/events/{id}", event.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("name").exists())
+                .andExpect(jsonPath("id").exists())
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.profile").exists())
+
+                // 문서화
+                .andDo(document("get-an-event"))
+        ;
+
+        // 테스트가 어떻게 실패할지 예상하는 것도 즐거움... 404가 나올 것 같다든가 405가 나올 거 같다든가
+    }
+
+    @Test
+    @TestDescription("없는 이벤트를 조회했을 때 404 응답 받기")
+    public void getEvent404() throws Exception {
+
+        Event event = this.generateEvent(100);
+
+        // When & Then
+        this.mockMvc.perform(get("/api/events/11883", event.getId()))
+                .andExpect(status().isNotFound());
+
+    }
+
+
+    private Event generateEvent(int index) {
         Event event = Event.builder()
                         .name("event " + index)
                         .description("test event")
                         .build();
 
-        this.eventRepository.save(event);
+        return this.eventRepository.save(event);
     }
 
 
