@@ -153,6 +153,43 @@ public class EventController {
 
     }
 
+
+    // update test
+    @PutMapping("/{id}")
+    public ResponseEntity updateEvent(@PathVariable Integer id,
+                                      @RequestBody @Valid EventDto eventDto,
+                                      Errors errors) { // dto validation  수행하고 그 결과는 errors에 담아서
+        Optional<Event> optionalEvent = this.eventRepository.findById(id);
+        if (optionalEvent.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // 안 비어 있으면 꺼내서 사용 가능
+        if (errors.hasErrors()) {
+            // binding할 때 에러가 있다는 얘기는 notnull, 뭐 이런 애노테이션에 걸렸다는 뜻
+            return badRequest(errors);
+        }
+
+        // 비즈니스 로직 검사
+        this.eventValidator.validate(eventDto, errors);
+        if (errors.hasErrors()) {
+            return badRequest(errors);
+        }
+
+        // 여기까지도 문제가 없으면 update 가능해짐
+        Event existingEvent = optionalEvent.get();
+//        existingEvent.setName(eventDto.getName()); // 이걸 쭉 MODELmAPPER가 다 해줌
+        this.modelMapper.map(eventDto, existingEvent); // src, dest 순서. eventDto의 값을 기존 event값에 덮어씌우는 것임
+        this.eventRepository.save(existingEvent);
+        Event savedEvent = this.eventRepository.save(existingEvent);
+
+        EventResource eventResource = new EventResource(savedEvent);
+        eventResource.add(new Link("/docs/index.html#resources-events-update").withRel("profile"));
+
+        return ResponseEntity.ok(eventResource);
+    }
+
+
     private static ResponseEntity<ErrorsResource> badRequest(Errors errors) {
         return ResponseEntity.badRequest().body(new ErrorsResource(errors));
     }
