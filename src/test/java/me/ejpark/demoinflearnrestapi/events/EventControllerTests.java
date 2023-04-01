@@ -401,7 +401,8 @@ public class EventControllerTests {
 
     }
 
-    // 이벤트 수정 API 테스트 
+    // 이벤트 수정 API 테스트
+    // 문서화 필수!!!!!
     // 이벤트 생성, 목록 조회, 단일 이벤트 조회 test가 전부 가능한 예제
     // 멈춰 놓고 직접 만들어 보기 (테스트 코드부터 구현하고)
     @Test
@@ -421,7 +422,9 @@ public class EventControllerTests {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("name").value(eventName)) // 수정한 이름으로 잘 반영되었는지
-                .andExpect(jsonPath("_links.self").exists());
+                .andExpect(jsonPath("_links.self").exists())
+                .andDo(document("update-event")) // request field  같은 snippet 추가하기
+        ;
 
     }
 
