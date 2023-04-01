@@ -14,6 +14,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Description;
 import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
@@ -23,11 +24,13 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.stream.IntStream;
 
 import static org.springframework.restdocs.headers.HeaderDocumentation.*;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -51,6 +54,10 @@ public class EventControllerTests {
     // content-type: json 변환
     @Autowired
     ObjectMapper objectMapper;
+
+
+    @Autowired
+    EventRepository eventRepository;
 
     // springbootTest 사용시 repository 선언되어 있다면 삭제해야 함 mocking 사용안한다
     // 슬라이스 테스트는 web용 bean만 등록 respository는 bean으로 등록 안 함. -> repository bean .못 찾아서 에러남
@@ -297,7 +304,53 @@ public class EventControllerTests {
         ; // 400 예상했는데 201 나와도 테스트 깨짐.
     }
 
+    @Test
+    @TestDescription("30개의 이벤트를 10개씩 띄우는 상황, 두번째 페이지 조회하기")
+    public void queryEvents() throws Exception {
 
-    // 테스트 다 실행하려면 메서드 밖에 커서 두게 하고 ctrl shift r -> 클래스 안에 있는 모든 테스트 메서드 실행
+        // Given
+        // 이벤트 30개 만들기
+//        IntStream.range(0, 30).forEach(i -> {
+//            this.generateEvent(i);
+//        });
+
+        // lambda refactored
+        IntStream.range(0, 30).forEach(this::generateEvent);
+
+        // when
+        this.mockMvc.perform(get("/api/events")
+                        .param("page", "1")
+                        .param("size", "10")
+                        .param("sort", "name,DESC")
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("page").exists())
+
+                // 각각의 이벤트에 대한 link
+                // item으로 갈 수 있는 link (클라이언트가 직접 입력할 필요 없이)
+                .andExpect(jsonPath("_embedded.eventList[0]._links.self").exists())
+
+                // self와 profile에 대한 link 확인
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.profile").exists()) // profile에 대한 link를 만들려면 문서화해야 함
+
+                // 문서화
+                .andDo(document("query-events"))
+        
+        ;
+    }
+
+    private void generateEvent(int index) {
+        Event event = Event.builder()
+                        .name("event " + index)
+                        .description("test event")
+                        .build();
+
+        this.eventRepository.save(event);
+    }
+
+
+    // 테스트 다 실행하려면 메서드 밖에 커서 두게 하고 ctrl shift F10 -> 클래스 안에 있는 모든 테스트 메서드 실행
 
 }

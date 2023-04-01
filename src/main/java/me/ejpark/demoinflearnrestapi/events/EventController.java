@@ -2,12 +2,19 @@ package me.ejpark.demoinflearnrestapi.events;
 
 import me.ejpark.demoinflearnrestapi.common.ErrorsResource;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.PagedResources;
+import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -111,6 +118,23 @@ public class EventController {
 
 
         return ResponseEntity.created(createdUri).body(eventResource);
+    }
+
+    @GetMapping
+    public ResponseEntity queryEvents(Pageable pageable, PagedResourcesAssembler<Event> assembler) {
+        // page에 대한 link 정보 (이전 페이지, 다음 페이지, 첫 페이지 등에 대한 정보 )
+        Page<Event> page = this.eventRepository.findAll(pageable);
+//        PagedResources<Resource<Event>> pagedResources = assembler.toResource(page);
+        // 너무 길어서 var로 단축.
+//        var pagedResources = assembler.toResource(page);
+        // 각각의 이벤트 리소스로 변경
+        var pagedResources = assembler.toResource(page, e -> new EventResource(e));
+
+        // profile link 추가 (뭐든 resource로 변환하고 나면 link를 추가할 수 있는 method가 생긴다)
+        pagedResources.add(new Link("/docs/index.html#resources-events-list").withRel("profile"));
+
+        return ResponseEntity.ok(pagedResources);
+
     }
 
     private static ResponseEntity<ErrorsResource> badRequest(Errors errors) {
