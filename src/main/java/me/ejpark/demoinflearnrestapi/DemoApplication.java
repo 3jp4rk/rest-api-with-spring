@@ -12,11 +12,12 @@ public class DemoApplication {
 	}
 
 
-	// ModelMapper (공용) Bean 등록
-	@Bean
-	public ModelMapper modelMapper() {
-		return new ModelMapper();
-
-	}
+	// AppConfig로 이동!
+//	// ModelMapper (공용) Bean 등록
+//	@Bean
+//	public ModelMapper modelMapper() {
+//		return new ModelMapper();
+//
+//	}
 
 }

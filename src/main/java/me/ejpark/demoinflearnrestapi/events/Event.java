@@ -1,6 +1,7 @@
 package me.ejpark.demoinflearnrestapi.events;
 
 import lombok.*;
+import me.ejpark.demoinflearnrestapi.accounts.Account;
 import me.ejpark.demoinflearnrestapi.events.EventStatus;
 
 import javax.persistence.*;
@@ -35,6 +36,10 @@ public class Event {
 
     @Enumerated(EnumType.STRING) // ordinal(기본값)은 enum 순서대로 0 1 2 이렇게 부여함. string으로 저장 권장.
     private EventStatus eventStatus = EventStatus.DRAFT; // 초기값 draft로 설정
+
+    // Event에서만 Owner (Account)를 참조할 수 있도록 단방향 mapping
+    @ManyToOne
+    private Account manager;
 
     public void update() {
         // Update free
