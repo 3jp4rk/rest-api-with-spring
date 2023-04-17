@@ -25,7 +25,6 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Controller
 @RequestMapping(value="/api/events", produces = MediaTypes.HAL_JSON_UTF8_VALUE)
-
 public class EventController {
 //    @PostMapping("/api/events")
 //    public ResponseEntity createEvent(@RequestBody Event event) {

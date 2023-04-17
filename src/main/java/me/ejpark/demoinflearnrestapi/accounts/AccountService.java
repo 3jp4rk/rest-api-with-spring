@@ -1,5 +1,6 @@
 package me.ejpark.demoinflearnrestapi.accounts;
 
+import me.ejpark.demoinflearnrestapi.events.Event;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -11,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -50,4 +52,7 @@ public class AccountService implements UserDetailsService {
         // 읽어 와서 spring security가 이해할 수 있도록 변환함
         return roles.stream().map(r -> new SimpleGrantedAuthority("ROLE_" + r.name())).collect(Collectors.toSet());
     }
+
+
+
 }
