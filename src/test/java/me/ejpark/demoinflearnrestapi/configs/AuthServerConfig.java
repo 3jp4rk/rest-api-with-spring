@@ -1,6 +1,7 @@
 package me.ejpark.demoinflearnrestapi.configs;
 
 import me.ejpark.demoinflearnrestapi.accounts.AccountService;
+import me.ejpark.demoinflearnrestapi.common.AppProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,6 +29,9 @@ public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
     @Autowired
     TokenStore tokenStore;
 
+    @Autowired
+    AppProperties appProperties;
+
     @Override
     public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
         security.passwordEncoder(passwordEncoder);
@@ -37,11 +41,20 @@ public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
 
         // 인메모리 말고 DB에서 관리하는 게 이상적임
+//        clients.inMemory()
+//                .withClient("myApp")
+//                .authorizedGrantTypes("password", "refresh_token")
+//                .scopes("read", "write") // 임의
+//                .secret(this.passwordEncoder.encode("pass"))
+//                .accessTokenValiditySeconds(10 * 60) // 10분
+//                .refreshTokenValiditySeconds(6 * 10 * 60); // 1시간
+
+        // appProperties 사용
         clients.inMemory()
-                .withClient("myApp")
+                .withClient(appProperties.getClientId())
                 .authorizedGrantTypes("password", "refresh_token")
                 .scopes("read", "write") // 임의
-                .secret(this.passwordEncoder.encode("pass"))
+                .secret(this.passwordEncoder.encode(appProperties.getClientSecret()))
                 .accessTokenValiditySeconds(10 * 60) // 10분
                 .refreshTokenValiditySeconds(6 * 10 * 60); // 1시간
 }

@@ -5,4 +5,6 @@ package me.ejpark.demoinflearnrestapi.configs;
 public class AuthServerConfig {
 
 
+
+
 }
