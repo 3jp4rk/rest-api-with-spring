@@ -38,7 +38,9 @@ public class AccountService implements UserDetailsService {
 //        return (UserDetails) account; // UserDetails type으로 변환
         // 해야 하는데... userDetails type에 보면 User라는 class가 있음! 그 User class 사용하면 전체 인터페이스 다 구현하지 않아도 됨
 
-        return new User(account.getEmail(), account.getPassword(), authorities(account.getRoles())); // 이렇게 입력 후 create method 수행
+//        return new User(account.getEmail(), account.getPassword(), authorities(account.getRoles())); // 이렇게 입력 후 create method 수행
+        return new AccountAdapter(account); // 이렇게 입력 후 create method 수행
+
     }
 
     private Collection<? extends GrantedAuthority> authorities(Set<AccountRole> roles) {

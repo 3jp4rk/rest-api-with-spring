@@ -1,5 +1,8 @@
 package me.ejpark.demoinflearnrestapi.events;
 
+import me.ejpark.demoinflearnrestapi.accounts.Account;
+import me.ejpark.demoinflearnrestapi.accounts.AccountAdapter;
+import me.ejpark.demoinflearnrestapi.accounts.CurrentUser;
 import me.ejpark.demoinflearnrestapi.common.ErrorsResource;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -11,7 +14,13 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
@@ -63,7 +72,10 @@ public class EventController {
     // DTO 사용
     // @Valid: request에 들어있는 값을 dto에  binding 할 떄 검증 수행
     // Errors에 검증 결과 넣어줌
-    public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto, Errors errors) { // 입력값에 id, free가 있어도 무시하게 됨. 받기로 명시한 값들만 들어오게 됨
+    public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto, // 입력값에 id, free가 있어도 무시하게 됨. 받기로 명시한 값들만 들어오게 됨
+                                      Errors errors,
+                                      @CurrentUser Account currentUser) {
+
 
         if (errors.hasErrors()) {
 //            return ResponseEntity.badRequest().body(errors);
@@ -88,6 +100,11 @@ public class EventController {
 
         // 들어온 값에 따라 free update (무료인지 아닌지)
         event.update();
+
+        // event manager 정보를 현재 user로 setting
+        event.setManager(currentUser);
+
+
         Event newEvent = this.eventRepository.save(event);
         // 위의 두 줄은 service class에 보내는 것도 괜찮음 .
 
@@ -118,7 +135,26 @@ public class EventController {
     }
 
     @GetMapping
-    public ResponseEntity queryEvents(Pageable pageable, PagedResourcesAssembler<Event> assembler) {
+    public ResponseEntity queryEvents(Pageable pageable,
+                                      PagedResourcesAssembler<Event> assembler,
+                                      @CurrentUser Account account) { // 바로 주입받기 가능
+
+        //meta annotation 지원!
+        // @AuthenticationPrincipal(expression="account") 간추리기 가능
+
+
+        // User 대신 AccountAdatper를 받게 된다
+        // User -> AccountAdatper -> Account
+        // expression 사용 시, AccountAdapter가 가지고 있는 객체 중에 account라는 field값을 꺼내서 주입
+
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // debug mode 걸어서 확인하기
+//        User principal = (User)authentication.getPrincipal(); // type-casting
+        // accountService에서 return한 user (spring security user)
+        // 현재 로그인되어 있으면 principal을 account로 가져오기, 없으면 null
+
+
         // page에 대한 link 정보 (이전 페이지, 다음 페이지, 첫 페이지 등에 대한 정보 )
         Page<Event> page = this.eventRepository.findAll(pageable);
 //        PagedResources<Resource<Event>> pagedResources = assembler.toResource(page);
@@ -130,12 +166,25 @@ public class EventController {
         // profile link 추가 (뭐든 resource로 변환하고 나면 link를 추가할 수 있는 method가 생긴다)
         pagedResources.add(new Link("/docs/index.html#resources-events-list").withRel("profile"));
 
+        if (account != null) {
+            pagedResources.add(linkTo(EventController.class).withRel("create-event")); // 이 link 추가해 줘
+
+        }
+
+        // 이벤트 생성 시에는 현재 사용자 정보를 event에 주입해서 비교해 줘야 한다 (manager가 맞는지)
+
+
         return ResponseEntity.ok(pagedResources);
 
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity getEvent(@PathVariable Integer id) {
+    public ResponseEntity getEvent(@PathVariable Integer id,
+                                   @CurrentUser Account currentUser) {
+
+        // anonymous로 접근하는 곳
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         Optional<Event> optionalEvent = this.eventRepository.findById(id);
 
         // 만약 없으면 404
@@ -148,6 +197,14 @@ public class EventController {
 
         // profile link 추가
         eventResource.add(new Link("/docs/index.html#resources-events-get").withRel("profile")); // index.adoc에 정의된 스펙대로
+
+        // currentUser == manager
+        if (event.getManager().equals(currentUser)) {
+            eventResource.add(linkTo(EventController.class).slash(event.getId()).withRel("update-event"));
+            // 이벤트 매니저인 경우에만 이벤트 수정 가능한 링크 보내주기
+        }
+
+
         return ResponseEntity.ok(eventResource);
 
     }
@@ -157,7 +214,8 @@ public class EventController {
     @PutMapping("/{id}")
     public ResponseEntity updateEvent(@PathVariable Integer id,
                                       @RequestBody @Valid EventDto eventDto,
-                                      Errors errors) { // dto validation  수행하고 그 결과는 errors에 담아서
+                                      Errors errors, // dto validation  수행하고 그 결과는 errors에 담아
+                                      @CurrentUser Account currentUser) {
         Optional<Event> optionalEvent = this.eventRepository.findById(id);
         if (optionalEvent.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -181,6 +239,12 @@ public class EventController {
         this.modelMapper.map(eventDto, existingEvent); // src, dest 순서. eventDto의 값을 기존 event값에 덮어씌우는 것임
         this.eventRepository.save(existingEvent);
         Event savedEvent = this.eventRepository.save(existingEvent);
+
+        // event를 가져왔는데 만약에 현재 접속자가 manager가 아닌 user일 경우
+        if (!existingEvent.getManager().equals(currentUser)) {
+            return new ResponseEntity(HttpStatus.UNAUTHORIZED);
+
+        }
 
         EventResource eventResource = new EventResource(savedEvent);
         eventResource.add(new Link("/docs/index.html#resources-events-update").withRel("profile"));

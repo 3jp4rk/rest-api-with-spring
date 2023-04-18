@@ -406,11 +406,54 @@ public class EventControllerTests extends BaseControllerTest {
                 // TODO (문서화 더 해야 함)
                 // page에 대한 정보: number: 1, links의 first는 첫 번째 페이지를 뜻한다... 이런 식으로 문서화 다 하면 됨
         ;
+    }
 
+    @Test
+    @TestDescription("30개의 이벤트를 10개씩 띄우는 상황, 두번째 페이지 조회하기")
+    public void queryEventsWithAuthentication() throws Exception {
+
+        // Given
+        // 이벤트 30개 만들기
+//        IntStream.range(0, 30).forEach(i -> {
+//            this.generateEvent(i);
+//        });
+
+        // lambda refactored
+        IntStream.range(0, 30).forEach(this::generateEvent); // 중단점 여기 찍고 디버거 실행
+
+        // when
+        this.mockMvc.perform(get("/api/events")
+                        .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                        .param("page", "1")
+                        .param("size", "10")
+                        .param("sort", "name,DESC")
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("page").exists())
+
+                // 각각의 이벤트에 대한 link
+                // item으로 갈 수 있는 link (클라이언트가 직접 입력할 필요 없이)
+                .andExpect(jsonPath("_embedded.eventList[0]._links.self").exists())
+
+                // self와 profile에 대한 link 확인
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.profile").exists()) // profile에 대한 link를 만들려면 문서화해야 함
+
+                // 로그인한 상태면 이게 같이 오길
+                .andExpect(jsonPath("_links.create-event").exists())
+
+                // 문서화
+                .andDo(document("query-events"))
+
+        // TODO (문서화 더 해야 함)
+        // page에 대한 정보: number: 1, links의 first는 첫 번째 페이지를 뜻한다... 이런 식으로 문서화 다 하면 됨
+        ;
     }
 
     @Test
     @TestDescription("기존의 이벤트를 1개 조회하기")
+    // 이 test를 디버그 모드로 실행해서 authentication 값 확인
     public void getEvent() throws Exception {
         // Given
         // 테스트를 위해서는 이벤트를 하나 생성해야 한다
