@@ -4,6 +4,7 @@ import me.ejpark.demoinflearnrestapi.accounts.Account;
 import me.ejpark.demoinflearnrestapi.accounts.AccountAdapter;
 import me.ejpark.demoinflearnrestapi.accounts.CurrentUser;
 import me.ejpark.demoinflearnrestapi.common.ErrorsResource;
+import org.bouncycastle.util.Times;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +28,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.net.URI;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -40,6 +44,8 @@ public class EventController {
 
     // EventRepository class 생성 후 주입
     private final EventRepository eventRepository;
+
+//    private final EventService eventService;
 
     private final ModelMapper modelMapper;
 
@@ -55,20 +61,6 @@ public class EventController {
 
     // event repository
     @PostMapping
-//    public ResponseEntity createEvent(@RequestBody Event event) {
-//
-//        Event newEvent = this.eventRepository.save(event);
-//
-//        // 함수 파라미터 추가했기 때문에 createEvent(null) 해줘야 하는데 이게 귀찮으니까
-//        // @RequestMapping으로 간다
-//        // PostMapping에서 url 뺐으니까 methodOn, createClass 제외
-////        URI createdUri = linkTo(EventController.class).slash("{id}").toUri();
-//        URI createdUri = linkTo(EventController.class).slash(newEvent.getId()).toUri(); // 저장한 newEvent객체의 id
-//
-////        event.setId(10); // 아이디 임의 생성해서 보내기
-////        return ResponseEntity.created(createdUri).build(); // 201 응답 생성
-//        return ResponseEntity.created(createdUri).body(event); // 201 응답 생성 -> repository 추가 시 return값 이렇게 바꿔야
-//    }
     // DTO 사용
     // @Valid: request에 들어있는 값을 dto에  binding 할 떄 검증 수행
     // Errors에 검증 결과 넣어줌
@@ -116,11 +108,6 @@ public class EventController {
         ControllerLinkBuilder selfLinkBuilder = linkTo(EventController.class).slash(newEvent.getId());
         URI createdUri = selfLinkBuilder.toUri();
 
-        // newEvent에서 null이 뜨는 이유? mocking했는데 왜지?
-        // save가 호출될 떄 object를 받은 경우에 객체 return.
-        // test code에서 save에 전달한 객체는 메서드 안에서 새로 만든 객체. test code의 모킹 객체가 아님.
-        // null이 return됨. null.getid라서 에러가 나 버림...
-
         // hateoas
         // event -> eventResource로 변환
         // alt option command v
@@ -134,32 +121,34 @@ public class EventController {
         return ResponseEntity.created(createdUri).body(eventResource);
     }
 
+    // 과제 추가
     @GetMapping
     public ResponseEntity queryEvents(Pageable pageable,
                                       PagedResourcesAssembler<Event> assembler,
+                                      @RequestParam(defaultValue="false") Boolean basePriceFilter,
+                                      @RequestParam(defaultValue="false") Boolean EnrollmentDatetimeFilter,
                                       @CurrentUser Account account) { // 바로 주입받기 가능
 
         //meta annotation 지원!
         // @AuthenticationPrincipal(expression="account") 간추리기 가능
+//        Page<Event> page = this.eventRepository.findAll(pageable);
+
+        Page<Event> page = null;
+        if (basePriceFilter) {
+            int minPrice = 100;
+            int maxPrice = 200;
+            page = this.eventRepository.findByBasePriceBetween(minPrice, maxPrice, pageable);
+        }
+        else if (EnrollmentDatetimeFilter) {
+            LocalDateTime now = LocalDateTime.now();
+            page = this.eventRepository.findByCloseEnrollmentDateTimeBefore(now, pageable);
+        }
+
+        else {
+            page = this.eventRepository.findAll(pageable);
+        }
 
 
-        // User 대신 AccountAdatper를 받게 된다
-        // User -> AccountAdatper -> Account
-        // expression 사용 시, AccountAdapter가 가지고 있는 객체 중에 account라는 field값을 꺼내서 주입
-
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        // debug mode 걸어서 확인하기
-//        User principal = (User)authentication.getPrincipal(); // type-casting
-        // accountService에서 return한 user (spring security user)
-        // 현재 로그인되어 있으면 principal을 account로 가져오기, 없으면 null
-
-
-        // page에 대한 link 정보 (이전 페이지, 다음 페이지, 첫 페이지 등에 대한 정보 )
-        Page<Event> page = this.eventRepository.findAll(pageable);
-//        PagedResources<Resource<Event>> pagedResources = assembler.toResource(page);
-        // 너무 길어서 var로 단축.
-//        var pagedResources = assembler.toResource(page);
         // 각각의 이벤트 리소스로 변경
         var pagedResources = assembler.toResource(page, e -> new EventResource(e));
 
@@ -168,7 +157,6 @@ public class EventController {
 
         if (account != null) {
             pagedResources.add(linkTo(EventController.class).withRel("create-event")); // 이 link 추가해 줘
-
         }
 
         // 이벤트 생성 시에는 현재 사용자 정보를 event에 주입해서 비교해 줘야 한다 (manager가 맞는지)
